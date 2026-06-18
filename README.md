@@ -65,22 +65,22 @@ Because the full clustering procedure was conducted on the complete dataset, and
 ## Installation
 
 
-pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 
 ## How to Run
 Run classification and feature selection pipeline:
 
-python PSSP_FeatureSelction_Classification.py
+`python PSSP_FeatureSelction_Classification.py`
 
 
 ## Outputs
 
 The script generates:
 
-Trained XGBoost classification model
-Cross-validation performance metrics (F1-score, recall, etc.)
-SHAP feature importance plots
+Trained XGBoost classification model,
+Cross-validation performance metrics (F1-score, recall, etc.),
+SHAP feature importance plots,
 Selected 8-item PSSP feature set
 
 

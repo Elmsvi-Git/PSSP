@@ -132,7 +132,7 @@ data_test['group'] = data_test['group'].replace(cluster_mapping)
 
 groups = data_test['group'].unique()
 #-------------------------------------------------------------------------
-#                       Continious Varible Examination
+#                       Varible Examination
 #-------------------------------------------------------------------------
 from utils import comparison_cont_var_across_clusters
 
@@ -150,25 +150,6 @@ results_continuous_vars = comparison_cont_var_across_clusters(data_test,continuo
 filtered_results_cont = results_continuous_vars[np.logical_or(
     (pd.to_numeric(results_continuous_vars['Adjusted_Pairwise_p'], errors='coerce') < 0.05) ,
     (results_continuous_vars['Pairwise_p'].isna()))]
-
-#--------------------------------------------------------------------------------
-#                       Categoricla Variable Examination
-#--------------------------------------------------------------------------------
-# from utils import comparison_cat_var_across_clusters
-
-# categorical_vars = [#'Acceptance',
-#                     'Sex','physicalActivity','Smoking',
-#                      'IBS','FD','GERD','FCP','FC','FB',
-#                      'DepressionGroups','AnxietyGroups',
-#                      ]
-
-# results_cat_var = comparison_cat_var_across_clusters(data_test, 
-#                                                      categorical_vars)
-
-# filtered_results_cat = results_cat_var[np.logical_or(
-#     (pd.to_numeric(results_cat_var['Adjusted_Pairwise_p'], 
-#                    errors='coerce') < 0.05) ,
-#     (results_cat_var['Pairwise_p'].isna()))]
 
 #------------------------------------------------------------------------------
 # 4 to 3 class conversion 

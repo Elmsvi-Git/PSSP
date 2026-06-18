@@ -22,10 +22,15 @@ from sklearn.tree import DecisionTreeClassifier
 from PSSP_plot_utils import evaluate_clustering , pca_plots , print_plot_categorical , print_plot_results
 from PSSP_utils import extract_rules
 
+from PSSP_utils import comparison_cont_var_across_clusters
+from scipy.stats import kstest, norm
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+from scipy.stats import shapiro
 #---------------------------------------------------------------------
 # Load data and cluster labels calculated earlier
 #---------------------------------------------------------------------
-df = pd.read_csv('PSSP_data.csv')
+df = pd.read_csv('PSSP_data.csv')#('data_psycho_29_2.csv')
 clusters = df['cluster'].values.copy()
 
 #-----------------------------------------------------------------------
@@ -49,7 +54,7 @@ input_var = ['Seeking_social_support','Problem_engagement',
           'physicalActivity' , 'Smoking',
           'Age' , 'Sex']
 
-categorical_feature = ['Sex','Smoking', 'physicalActivity',]#
+categorical_feature = ['Sex','Smoking', 'physicalActivity',]
 
 categorical_data = df[categorical_feature]
 
@@ -61,10 +66,7 @@ plot_feature = ['Seeking_social_support','Problem_engagement',
                      'Openness', 'Agreeableness', 
                      'Conscientiousness', 
                      'GHQscore','AHEI','Age' , 'BMI' ,
-                     'healthy_seeking' ,#'Lifestyle_score',
-                     #'Sex','physicalActivity',#'Smoking',
-                     #'DepressionScore','AxietyScore',
-                     #'IBS','FD'
+                     'healthy_seeking' ,
                      ]
 
 
@@ -134,8 +136,6 @@ groups = data_test['group'].unique()
 #-------------------------------------------------------------------------
 #                       Varible Examination
 #-------------------------------------------------------------------------
-from utils import comparison_cont_var_across_clusters
-
 continuous_vars = ['Seeking_social_support','Problem_engagement',
                      'Positive_reinterpretation','Acceptance',
                      'Avoidance',
@@ -146,15 +146,38 @@ continuous_vars = ['Seeking_social_support','Problem_engagement',
                      'AHEI', 'healthy_seeking','Lifestyle_score',
                      'GHQscore' ,'Age' , 'BMI' ,]
 
+for var in continuous_vars:
+    stat, p = kstest(df[var], 'norm',
+                     args=(df[var].mean(),
+                           df[var].std()))
+    print(var)
+    print("KS Statistic:", stat)
+    print("p-value:", p)
+
+    stats.probplot(df[var], dist="norm", plot=plt)
+    plt.title("Q-Q Plot of ", var)
+    plt.show()
+    
+    stat, p = shapiro(df[var])
+    
+    print("Shapiro-Wilk Statistic:", stat)
+    print("p-value:", p)
+    
+    if p > 0.05:
+        print("Data is approximately normal (fail to reject H0)")
+    else:
+        print("Data is NOT normal (reject H0)")
+
+
 results_continuous_vars = comparison_cont_var_across_clusters(data_test,continuous_vars)
 filtered_results_cont = results_continuous_vars[np.logical_or(
     (pd.to_numeric(results_continuous_vars['Adjusted_Pairwise_p'], errors='coerce') < 0.05) ,
     (results_continuous_vars['Pairwise_p'].isna()))]
 
+
 #------------------------------------------------------------------------------
 # 4 to 3 class conversion 
 #----------------------------------------------------------------------------
-cluster_1_4 = clusters#np.where(clusters !=3)[0]
 X_14 = df.copy()
 
 all_features = []
@@ -174,7 +197,7 @@ from sklearn.preprocessing import LabelEncoder
 le = LabelEncoder()
 y = le.fit_transform(y)
 #----------------------------------------------------------------------------
-#Three-class classification and feature imprtance caculation
+#Three-class classification and feature importance calculation
 #----------------------------------------------------------------------------
 weights = { 0: 2326/646, 1: 2326/235, 2:1}
 
@@ -355,4 +378,45 @@ report = classification_report(y_test, y_pred_dt, output_dict=True)
 report_df = pd.DataFrame(report).transpose()
 
 extract_rules(best_model_dt, selected_features)
+
+#--------------------------------------
+# Validity : Internal consistency Check
+#--------------------------------------
+
+personality_items = ['question_42','question_51','question_26','question_21']
+
+coping_items = ['Q5','Q7' ,'Q4','Q18']
+
+X_personaity = X_selected[personality_items]
+X_personaity['question_42'] = 4 - X_personaity['question_42']
+
+import pingouin as pg
+
+alpha_personality, ci = pg.cronbach_alpha(data=X_personaity)
+
+print("Personality Alpha:", round(alpha_personality,3))
+print("95% CI:", ci)
+
+X_coping = X_selected[coping_items]
+alpha_coping, ci = pg.cronbach_alpha(data=X_coping)
+
+print("Coping Alpha:", round(alpha_coping,3))
+print("95% CI:", ci)
+
+
+X_pssp = pd.concat((X_personaity, X_coping), axis = 1)
+alpha_total, ci = pg.cronbach_alpha(data=X_pssp)
+
+print("Total Alpha:", round(alpha_total,3))
+print("95% CI:", ci)
+
+
+
+
+
+
+
+
+
+
 
